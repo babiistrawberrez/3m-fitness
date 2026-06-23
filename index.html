@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q3 Cozy Pink Fitness Tracker V8 🌸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f7e6e9; color: #4a3538; }
+        .pink-gradient { background: linear-gradient(135deg, #f3a0b0 0%, #fbc2b5 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255, 182, 193, 0.4); }
+        .glass-input { background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(255, 182, 193, 0.5); }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.9); outline: none; border-color: #f3a0b0; }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.2); rounded: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f3a0b0; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header & Month Selector -->
+        <header class="text-center mb-8 glass-card p-6 rounded-3xl shadow-sm">
+            <h1 class="text-2xl font-bold text-pink-700 mb-2">🌸 My Fitness & Weight Journey</h1>
+            <p class="text-sm text-pink-500 mb-5 font-medium">我的健身與體重紀錄</p>
+            
+            <div class="flex justify-center gap-2 bg-pink-100/60 p-1.5 rounded-2xl max-w-md mx-auto border border-pink-200">
+                <button onclick="switchMonth('july')" id="btn-july" class="flex-1 py-1.5 rounded-xl transition-all text-pink-600 bg-white shadow-sm leading-tight">
+                    <span class="text-sm font-bold block">July</span><span class="text-[10px] font-normal">7月</span>
+                </button>
+                <button onclick="switchMonth('august')" id="btn-august" class="flex-1 py-1.5 rounded-xl transition-all text-pink-400 hover:text-pink-600 leading-tight">
+                    <span class="text-sm font-bold block">August</span><span class="text-[10px] font-normal">8月</span>
+                </button>
+                <button onclick="switchMonth('september')" id="btn-september" class="flex-1 py-1.5 rounded-xl transition-all text-pink-400 hover:text-pink-600 leading-tight">
+                    <span class="text-sm font-bold block">September</span><span class="text-[10px] font-normal">9月</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- % Success Statistics -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="glass-card p-4 rounded-2xl text-center flex flex-col justify-between">
+                <span class="text-xs text-pink-600 font-bold block mb-1">Functional Done <span class="block text-[10px] font-normal text-pink-500/80">肌力訓練 完成率</span></span>
+                <span id="stat-func" class="text-2xl font-bold text-pink-700 my-1">0%</span>
+                <div class="w-full bg-pink-100/50 h-2 rounded-full overflow-hidden"><div id="bar-func" class="bg-gradient-to-r from-pink-400 to-rose-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+            </div>
+            <div class="glass-card p-4 rounded-2xl text-center flex flex-col justify-between">
+                <span class="text-xs text-pink-600 font-bold block mb-1">Pilates Done <span class="block text-[10px] font-normal text-pink-500/80">皮拉提斯 完成率</span></span>
+                <span id="stat-pila" class="text-2xl font-bold text-pink-700 my-1">0%</span>
+                <div class="w-full bg-pink-100/50 h-2 rounded-full overflow-hidden"><div id="bar-pila" class="bg-gradient-to-r from-pink-400 to-rose-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+            </div>
+            <div class="glass-card p-4 rounded-2xl text-center flex flex-col justify-between">
+                <span class="text-xs text-pink-600 font-bold block mb-1">Steps Target <span class="block text-[10px] font-normal text-pink-500/80">步數達標率</span></span>
+                <span id="stat-steps" class="text-2xl font-bold text-pink-700 my-1">0%</span>
+                <div class="w-full bg-pink-100/50 h-2 rounded-full overflow-hidden"><div id="bar-steps" class="bg-gradient-to-r from-pink-400 to-rose-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Daily Logs -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-card p-6 rounded-3xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6 border-b border-pink-200/50 pb-4">
+                        <div>
+                            <h2 id="month-title" class="text-xl font-bold text-pink-800">🗓️ Monthly Logs</h2>
+                            <span id="month-subtitle" class="text-xs text-pink-600">每月紀錄</span>
+                        </div>
+                        <span class="bg-pink-200/60 text-pink-700 text-xs px-3 py-1 rounded-full font-bold">2026</span>
+                    </div>
+
+                    <div id="daily-log-container" class="space-y-4 max-h-[620px] overflow-y-auto pr-2 custom-scrollbar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Weight Analysis & Calendar -->
+            <div class="space-y-6">
+                <!-- Weight Analysis Box -->
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-l-4 border-pink-400">
+                    <h3 class="font-bold text-pink-800 mb-1 flex items-center gap-2 text-sm md:text-base">
+                        <i class="fa-solid fa-calculator"></i> Weight Summary
+                    </h3>
+                    <p class="text-[11px] text-pink-600 mb-4 ml-6">體重總結與比較</p>
+                    
+                    <div class="space-y-3 text-xs md:text-sm">
+                        <div class="flex justify-between border-b border-pink-100 pb-2">
+                            <span class="text-slate-600">Starting Weight<br><span class="text-[9px] text-slate-400">本月初始體重</span></span>
+                            <span id="month-start-w" class="font-bold text-pink-700 self-center">-- kg</span>
+                        </div>
+                        <div class="flex justify-between border-b border-pink-100 pb-2">
+                            <span class="text-slate-600">Latest Weight<br><span class="text-[9px] text-slate-400">本月最新體重</span></span>
+                            <span id="month-end-w" class="font-bold text-pink-700 self-center">-- kg</span>
+                        </div>
+                        <div class="flex justify-between border-b border-pink-100 pb-2 bg-pink-50 p-2 rounded-lg">
+                            <span class="text-pink-800 font-semibold">Lost This Month<br><span class="text-[9px] text-pink-600/70">本月減重</span></span>
+                            <span id="month-diff-w" class="font-bold text-pink-600 self-center">-- kg</span>
+                        </div>
+                        <div class="flex justify-between border-b border-pink-100 pb-2 bg-pink-100/30 p-2 rounded-lg">
+                            <span class="text-slate-700 font-medium">Initial Baseline Weight<br><span class="text-[10px] text-pink-500">Started on May 1 (始於5月1日)</span></span>
+                            <span class="font-bold text-slate-800 self-center">70.9 kg</span>
+                        </div>
+                        <div class="flex justify-between border-b border-pink-100 pb-2 px-2">
+                            <span class="text-slate-600">Total Progress Lost<br><span class="text-[9px] text-slate-400">總共減重</span></span>
+                            <span id="diff-from-start" class="font-bold self-center">-- kg</span>
+                        </div>
+                        <div class="flex justify-between pt-1 bg-rose-100/40 p-2 rounded-lg items-center">
+                            <span class="text-rose-700 font-bold leading-tight">Goal / 目標<br><span class="text-sm">(58.0 kg)</span></span>
+                            <div class="text-right">
+                                <span id="to-goal-val" class="font-bold block text-rose-600 text-base">-- kg</span>
+                                <span class="text-[9px] text-rose-500 block">Remaining / 剩餘</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weight Progress Mini Calendar -->
+                <div class="glass-card p-5 rounded-3xl shadow-sm">
+                    <h3 class="font-bold text-pink-800 mb-1 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-calendar-days"></i> Weight Calendar Trend
+                    </h3>
+                    <p class="text-[10px] text-pink-600 mb-3 ml-6">體重日曆趨勢</p>
+
+                    <div class="text-[10px] text-pink-500 mb-2 grid grid-cols-7 text-center font-bold">
+                        <div class="flex flex-col"><span>Sun</span><span class="text-[8px] font-normal">日</span></div>
+                        <div class="flex flex-col"><span>Mon</span><span class="text-[8px] font-normal">一</span></div>
+                        <div class="flex flex-col"><span>Tue</span><span class="text-[8px] font-normal">二</span></div>
+                        <div class="flex flex-col"><span>Wed</span><span class="text-[8px] font-normal">三</span></div>
+                        <div class="flex flex-col"><span>Thu</span><span class="text-[8px] font-normal">四</span></div>
+                        <div class="flex flex-col"><span>Fri</span><span class="text-[8px] font-normal">五</span></div>
+                        <div class="flex flex-col"><span>Sat</span><span class="text-[8px] font-normal">六</span></div>
+                    </div>
+                    <div id="weight-calendar-grid" class="calendar-grid">
+                    </div>
+                    <p class="text-[9px] text-pink-400 mt-3 italic leading-tight">
+                        * Numbers show variance from Day 1 of the month.<br>
+                        (數字顯示與本月第一天的體重差異)<br>
+                        * 🩸 Indicates period days (代表生理期)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ABSOLUTE_START = 70.9;
+        const TARGET_GOAL = 58.0;
+        
+        let currentMonthKey = 'july';
+        
+        const monthConfig = {
+            july: { nameEn: 'July', nameTw: '7月', days: 31, startOffset: 3 },      
+            august: { nameEn: 'August', nameTw: '8月', days: 31, startOffset: 6 },     
+            september: { nameEn: 'September', nameTw: '9月', days: 30, startOffset: 2 }   
+        };
+
+        const weekdayNamesEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const weekdayNamesTw = ['日', '一', '二', '三', '四', '五', '六'];
+
+        let multiMonthData = {
+            july: generateBlankMonth(31, 3),
+            august: generateBlankMonth(31, 6),
+            september: generateBlankMonth(30, 2)
+        };
+
+        function generateBlankMonth(days, startOffset) {
+            return Array.from({ length: days }, (_, i) => {
+                const dayNum = i + 1;
+                const weekday = (dayNum - 1 + startOffset) % 7; 
+                return {
+                    day: dayNum,
+                    weekday: weekday,
+                    weight: 0,
+                    steps: 0,
+                    isDone: false,
+                    intensity: 100,
+                    eval: 'same',
+                    restReview: '',
+                    isPeriod: false
+                };
+            });
+        }
+
+        function getWorkoutPlan(weekday) {
+            if (weekday === 0) return { nameEn: "🎉 Rest & Recovery", nameTw: "休息與恢復 100%", type: 'rest', goalEn: 'Review & Recovery', goalTw: '檢視與恢復', stepGoal: 0, link: '' };
+            if (weekday === 1) return { nameEn: "💪 Functional A", nameTw: "肌力訓練 A", type: 'func', goalEn: 'Accumulate 6,000 steps', goalTw: '累積 6,000 步', stepGoal: 6000, link: 'https://www.youtube.com/watch?v=p6CDqjAgn8A' };
+            if (weekday === 3) return { nameEn: "💪 Functional B", nameTw: "肌力訓練 B", type: 'func', goalEn: 'Accumulate 6,000 steps', goalTw: '累積 6,000 步', stepGoal: 6000, link: 'https://www.youtube.com/watch?v=p9bvH-Q10ts&t=518s' };
+            if (weekday === 5) return { nameEn: "💪 Functional C", nameTw: "肌力訓練 C", type: 'func', goalEn: 'Accumulate 6,000 steps', goalTw: '累積 6,000 步', stepGoal: 6000, link: 'https://www.youtube.com/watch?v=PqMRCofha7A' };
+            return { nameEn: "🧘‍♀️ Pilates", nameTw: "皮拉提斯", type: 'pila', goalEn: 'Accumulate 10,000 steps', goalTw: '累積 10,000 步', stepGoal: 10000, link: 'https://youtu.be/KJ8Dd_bHv6s?si=S4p0cleVjsiFCY6l' };
+        }
+
+        function switchMonth(monthKey) {
+            currentMonthKey = monthKey;
+            
+            ['july', 'august', 'september'].forEach(k => {
+                const btn = document.getElementById(`btn-${k}`);
+                if (k === monthKey) {
+                    btn.className = "flex-1 py-1.5 rounded-xl transition-all text-pink-600 bg-white shadow-sm leading-tight";
+                } else {
+                    btn.className = "flex-1 py-1.5 rounded-xl transition-all text-pink-400 hover:text-pink-600 leading-tight";
+                }
+            });
+
+            document.getElementById('month-title').innerText = `🗓️ Logs for ${monthConfig[monthKey].nameEn}`;
+            document.getElementById('month-subtitle').innerText = `${monthConfig[monthKey].nameTw}紀錄`;
+            
+            renderLogs();
+            calculateAllStats();
+        }
+
+        function calculateAllStats() {
+            const currentData = multiMonthData[currentMonthKey];
+            let funcDone = 0, funcTotal = 0;
+            let pilaDone = 0, pilaTotal = 0;
+            let stepSuccess = 0, activeDays = 0;
+            
+            let firstWeightInMonth = 0;
+            let latestWeightInMonth = 0;
+
+            currentData.forEach((d) => {
+                const plan = getWorkoutPlan(d.weekday);
+                if (plan.type === 'func') {
+                    funcTotal++;
+                    if (d.isDone) funcDone++;
+                } else if (plan.type === 'pila') {
+                    pilaTotal++;
+                    if (d.isDone) pilaDone++;
+                }
+                
+                if (plan.stepGoal > 0) {
+                    activeDays++;
+                    if (d.steps >= plan.stepGoal) stepSuccess++;
+                }
+
+                if (d.weight > 0) {
+                    if (firstWeightInMonth === 0) firstWeightInMonth = d.weight;
+                    latestWeightInMonth = d.weight;
+                }
+            });
+
+            document.getElementById('stat-func').innerText = funcTotal ? Math.round((funcDone/funcTotal)*100) + '%' : '0%';
+            document.getElementById('bar-func').style.width = funcTotal ? (funcDone/funcTotal)*100 + '%' : '0%';
+            
+            document.getElementById('stat-pila').innerText = pilaTotal ? Math.round((pilaDone/pilaTotal)*100) + '%' : '0%';
+            document.getElementById('bar-pila').style.width = pilaTotal ? (pilaDone/pilaTotal)*100 + '%' : '0%';
+
+            document.getElementById('stat-steps').innerText = activeDays ? Math.round((stepSuccess/activeDays)*100) + '%' : '0%';
+            document.getElementById('bar-steps').style.width = activeDays ? (stepSuccess/activeDays)*100 + '%' : '0%';
+
+            document.getElementById('month-start-w').innerText = firstWeightInMonth > 0 ? firstWeightInMonth.toFixed(1) + ' kg' : '--';
+            document.getElementById('month-end-w').innerText = latestWeightInMonth > 0 ? latestWeightInMonth.toFixed(1) + ' kg' : '--';
+
+            const monthDiffElem = document.getElementById('month-diff-w');
+            if (firstWeightInMonth > 0 && latestWeightInMonth > 0) {
+                const monthDiff = latestWeightInMonth - firstWeightInMonth;
+                monthDiffElem.innerText = `${monthDiff >= 0 ? '+' : ''}${monthDiff.toFixed(1)} kg`;
+                monthDiffElem.style.color = monthDiff <= 0 ? '#059669' : '#e11d48';
+            } else {
+                monthDiffElem.innerText = '--';
+                monthDiffElem.style.color = 'inherit';
+            }
+
+            const diffStartElem = document.getElementById('diff-from-start');
+            const toGoalElem = document.getElementById('to-goal-val');
+
+            if (latestWeightInMonth > 0) {
+                const diffFromAbsoluteStart = latestWeightInMonth - ABSOLUTE_START;
+                diffStartElem.innerText = `${diffFromAbsoluteStart >= 0 ? '+' : ''}${diffFromAbsoluteStart.toFixed(1)} kg`;
+                diffStartElem.style.color = diffFromAbsoluteStart <= 0 ? '#059669' : '#e11d48';
+
+                const remainingToGoal = latestWeightInMonth - TARGET_GOAL;
+                toGoalElem.innerText = remainingToGoal > 0 ? `${remainingToGoal.toFixed(1)} kg` : '0.0 kg 🎉';
+            } else {
+                diffStartElem.innerText = '--';
+                diffStartElem.style.color = 'inherit';
+                toGoalElem.innerText = '--';
+            }
+
+            renderCalendar();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('daily-log-container');
+            container.innerHTML = '';
+            const currentData = multiMonthData[currentMonthKey];
+
+            currentData.forEach((d, idx) => {
+                const plan = getWorkoutPlan(d.weekday);
+                const isRest = plan.type === 'rest';
+                const dayOfWeekEn = weekdayNamesEn[d.weekday];
+                const dayOfWeekTw = weekdayNamesTw[d.weekday];
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border ${isRest ? 'bg-amber-100/40 border-amber-200/60 border-dashed' : 'bg-white/50 border-pink-200/40'} transition-all`;
+                
+                const youtubeButton = plan.link ? `
+                    <a href="${plan.link}" target="_blank" class="inline-flex items-center ml-2 text-red-500 hover:text-red-600 transition-colors" title="Open YouTube Video">
+                        <i class="fa-brands fa-youtube text-lg md:text-xl"></i>
+                    </a>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="flex flex-col gap-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold text-pink-500/80 block leading-tight">
+                                    ${monthConfig[currentMonthKey].nameEn} ${d.day} (${dayOfWeekEn})<br>
+                                    <span class="font-normal text-[9px]">${monthConfig[currentMonthKey].nameTw}${d.day}日 (星期${dayOfWeekTw})</span>
+                                </span>
+                                <div class="flex items-center mt-1">
+                                    <h4 class="font-bold text-pink-800 text-sm md:text-base leading-tight">
+                                        ${plan.nameEn} <span class="text-[10px] font-normal text-pink-600 block sm:inline sm:ml-1">/ ${plan.nameTw}</span>
+                                    </h4>
+                                    ${youtubeButton}
+                                </div>
+                                <p class="text-[11px] text-pink-600/80 mt-0.5 leading-tight">
+                                    ${plan.goalEn} <span class="text-[9px] block sm:inline sm:ml-1">(${plan.goalTw})</span>
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <div class="flex items-center gap-1">
+                                    <div class="text-right leading-none mr-1">
+                                        <span class="text-[10px] text-slate-400 block">kg</span>
+                                        <span class="text-[8px] text-slate-400 block">公斤</span>
+                                    </div>
+                                    <input type="number" placeholder="0.0" value="${d.weight || ''}" 
+                                        onchange="updateData(${idx}, 'weight', this.value)"
+                                        class="w-16 p-1 text-center text-sm rounded-lg glass-input font-bold text-pink-700">
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <div class="text-right leading-none mr-1">
+                                        <span class="text-[10px] text-slate-400 block">steps</span>
+                                        <span class="text-[8px] text-slate-400 block">步</span>
+                                    </div>
+                                    <input type="number" placeholder="0" value="${d.steps || ''}" 
+                                        onchange="updateData(${idx}, 'steps', this.value)"
+                                        class="w-16 p-1 text-center text-xs rounded-lg glass-input text-slate-600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3 mt-1 border-t border-pink-200/20 pt-2">
+                            ${!isRest ? `
+                            <label class="flex items-center gap-1 cursor-pointer text-xs font-bold text-pink-700">
+                                <input type="checkbox" ${d.isDone ? 'checked' : ''} onchange="updateData(${idx}, 'isDone', this.checked)" class="rounded text-pink-500 focus:ring-pink-400"> 
+                                <span class="leading-tight">Completed? <br><span class="text-[9px] font-normal">完成了嗎？</span></span>
+                            </label>
+                            <select onchange="updateData(${idx}, 'intensity', this.value)" class="text-[10px] p-1 rounded-lg glass-input focus:outline-none">
+                                <option value="100" ${d.intensity == 100 ? 'selected' : ''}>100% Full Effort (全力以赴)</option>
+                                <option value="75" ${d.intensity == 75 ? 'selected' : ''}>75% Almost Done (幾乎完成)</option>
+                                <option value="50" ${d.intensity == 50 ? 'selected' : ''}>50% Fair (盡力了)</option>
+                            </select>
+                            <select onchange="updateData(${idx}, 'eval', this.value)" class="text-[10px] p-1 rounded-lg glass-input focus:outline-none">
+                                <option value="better" ${d.eval == 'better' ? 'selected' : ''}>💪 Feeling Stronger (變強了)</option>
+                                <option value="same" ${d.eval == 'same' ? 'selected' : ''}>😐 Neutral (沒變化)</option>
+                            </select>
+                            ` : ''}
+
+                            <label class="flex items-center gap-1 cursor-pointer text-xs font-bold text-rose-600 ml-auto sm:ml-0 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                                <input type="checkbox" ${d.isPeriod ? 'checked' : ''} onchange="updateData(${idx}, 'isPeriod', this.checked)" class="rounded text-rose-500 focus:ring-rose-400"> 
+                                <span class="leading-tight">🩸 Period Day <br><span class="text-[9px] font-normal">生理期</span></span>
+                            </label>
+                        </div>
+
+                        ${isRest ? `
+                        <div class="mt-1 border-t border-amber-200/40 pt-2">
+                            <textarea placeholder="Rest day! Write down your thoughts... (休息日！寫下你的感受...)" onchange="updateData(${idx}, 'restReview', this.value)"
+                                class="w-full text-xs p-2 rounded-xl glass-input focus:outline-none text-amber-900 h-12">${d.restReview}</textarea>
+                            <div class="mt-1 text-[10px] text-amber-700 font-bold italic leading-tight">
+                                ✨ vs Last Rest Day (Lost this week) / 與上週休息日相比 (本週減重): <br>
+                                <span class="text-amber-800">${calculateWeeklyDiff(idx)}</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function calculateWeeklyDiff(index) {
+            const currentData = multiMonthData[currentMonthKey];
+            const currentWeight = parseFloat(currentData[index].weight);
+            
+            if (!currentWeight || index < 7) return '-- (Insufficient data / 數據不足)';
+            
+            const pastWeight = parseFloat(currentData[index - 7].weight);
+            if (!pastWeight) return '-- (No previous record / 無上次紀錄)';
+
+            const diff = currentWeight - pastWeight;
+            if (diff <= 0) {
+                return `${Math.abs(diff).toFixed(1)} kg 🎉`;
+            } else {
+                return `+${diff.toFixed(1)} kg (Increased / 增加)`;
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('weight-calendar-grid');
+            grid.innerHTML = '';
+            const config = monthConfig[currentMonthKey];
+            const currentData = multiMonthData[currentMonthKey];
+            
+            let dayOneWeight = parseFloat(currentData[0].weight); 
+
+            for(let i = 0; i < config.startOffset; i++){ 
+                grid.appendChild(document.createElement('div')); 
+            }
+
+            currentData.forEach(d => {
+                const dayBox = document.createElement('div');
+                dayBox.className = `min-h-10 text-[9px] flex flex-col items-center justify-center p-1 rounded-xl border ${d.weight > 0 ? 'bg-pink-200/40 border-pink-300' : 'bg-white/30 border-pink-100/30'}`;
+                
+                let diffText = '';
+                if (d.weight > 0 && dayOneWeight > 0) {
+                    const diffMonthStart = d.weight - dayOneWeight;
+                    diffText = diffMonthStart >= 0 ? '+' + diffMonthStart.toFixed(1) : diffMonthStart.toFixed(1);
+                }
+                
+                const periodIndicator = d.isPeriod ? '<span class="text-[9px] mt-0.5 leading-none">🩸</span>' : '';
+
+                dayBox.innerHTML = `
+                    <span class="opacity-40 font-semibold">${d.day}</span>
+                    <span class="font-bold text-rose-600 leading-tight">${diffText}</span>
+                    ${periodIndicator}
+                `;
+                grid.appendChild(dayBox);
+            });
+        }
+
+        function updateData(index, field, value) {
+            const currentData = multiMonthData[currentMonthKey];
+            currentData[index][field] = (field === 'weight' || field === 'steps' || field === 'intensity') ? parseFloat(value) : value;
+            calculateAllStats();
+        }
+
+        window.onload = function() {
+            switchMonth('july');
+        };
+    </script>
+</body>
+</html>
