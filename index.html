@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q3 Cozy Pink Fitness Tracker V8 🌸</title>
+    <title>Q3 Cozy Pink Fitness Tracker V9 (Auto-Save) 🌸</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -24,7 +24,6 @@
 <body class="p-4 md:p-8 min-h-screen">
 
     <div class="max-w-5xl mx-auto">
-        <!-- Header & Month Selector -->
         <header class="text-center mb-8 glass-card p-6 rounded-3xl shadow-sm">
             <h1 class="text-2xl font-bold text-pink-700 mb-2">🌸 My Fitness & Weight Journey</h1>
             <p class="text-sm text-pink-500 mb-5 font-medium">我的健身與體重紀錄</p>
@@ -42,7 +41,6 @@
             </div>
         </header>
 
-        <!-- % Success Statistics -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <div class="glass-card p-4 rounded-2xl text-center flex flex-col justify-between">
                 <span class="text-xs text-pink-600 font-bold block mb-1">Functional Done <span class="block text-[10px] font-normal text-pink-500/80">肌力訓練 完成率</span></span>
@@ -62,7 +60,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left: Daily Logs -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="glass-card p-6 rounded-3xl shadow-sm">
                     <div class="flex justify-between items-center mb-6 border-b border-pink-200/50 pb-4">
@@ -78,9 +75,7 @@
                 </div>
             </div>
 
-            <!-- Right: Weight Analysis & Calendar -->
             <div class="space-y-6">
-                <!-- Weight Analysis Box -->
                 <div class="glass-card p-6 rounded-3xl shadow-sm border-l-4 border-pink-400">
                     <h3 class="font-bold text-pink-800 mb-1 flex items-center gap-2 text-sm md:text-base">
                         <i class="fa-solid fa-calculator"></i> Weight Summary
@@ -118,7 +113,6 @@
                     </div>
                 </div>
 
-                <!-- Weight Progress Mini Calendar -->
                 <div class="glass-card p-5 rounded-3xl shadow-sm">
                     <h3 class="font-bold text-pink-800 mb-1 flex items-center gap-2 text-sm">
                         <i class="fa-solid fa-calendar-days"></i> Weight Calendar Trend
@@ -149,6 +143,7 @@
     <script>
         const ABSOLUTE_START = 70.9;
         const TARGET_GOAL = 58.0;
+        const STORAGE_KEY = 'cozy_fitness_data_v9';
         
         let currentMonthKey = 'july';
         
@@ -161,11 +156,7 @@
         const weekdayNamesEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const weekdayNamesTw = ['日', '一', '二', '三', '四', '五', '六'];
 
-        let multiMonthData = {
-            july: generateBlankMonth(31, 3),
-            august: generateBlankMonth(31, 6),
-            september: generateBlankMonth(30, 2)
-        };
+        let multiMonthData = loadSavedData();
 
         function generateBlankMonth(days, startOffset) {
             return Array.from({ length: days }, (_, i) => {
@@ -183,6 +174,26 @@
                     isPeriod: false
                 };
             });
+        }
+
+        function loadSavedData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    console.error("Error parsing saved data", e);
+                }
+            }
+            return {
+                july: generateBlankMonth(31, 3),
+                august: generateBlankMonth(31, 6),
+                september: generateBlankMonth(30, 2)
+            };
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(multiMonthData));
         }
 
         function getWorkoutPlan(weekday) {
@@ -327,7 +338,7 @@
                                         <span class="text-[10px] text-slate-400 block">kg</span>
                                         <span class="text-[8px] text-slate-400 block">公斤</span>
                                     </div>
-                                    <input type="number" placeholder="0.0" value="${d.weight || ''}" 
+                                    <input type="number" step="0.1" placeholder="0.0" value="${d.weight || ''}" 
                                         onchange="updateData(${idx}, 'weight', this.value)"
                                         class="w-16 p-1 text-center text-sm rounded-lg glass-input font-bold text-pink-700">
                                 </div>
@@ -369,7 +380,7 @@
                         ${isRest ? `
                         <div class="mt-1 border-t border-amber-200/40 pt-2">
                             <textarea placeholder="Rest day! Write down your thoughts... (休息日！寫下你的感受...)" onchange="updateData(${idx}, 'restReview', this.value)"
-                                class="w-full text-xs p-2 rounded-xl glass-input focus:outline-none text-amber-900 h-12">${d.restReview}</textarea>
+                                class="w-full text-xs p-2 rounded-xl glass-input focus:outline-none text-amber-900 h-12">${d.restReview || ''}</textarea>
                             <div class="mt-1 text-[10px] text-amber-700 font-bold italic leading-tight">
                                 ✨ vs Last Rest Day (Lost this week) / 與上週休息日相比 (本週減重): <br>
                                 <span class="text-amber-800">${calculateWeeklyDiff(idx)}</span>
@@ -434,7 +445,16 @@
 
         function updateData(index, field, value) {
             const currentData = multiMonthData[currentMonthKey];
-            currentData[index][field] = (field === 'weight' || field === 'steps' || field === 'intensity') ? parseFloat(value) : value;
+            
+            if (field === 'isDone' || field === 'isPeriod') {
+                currentData[index][field] = value;
+            } else if (field === 'weight' || field === 'steps' || field === 'intensity') {
+                currentData[index][field] = value === '' ? 0 : parseFloat(value);
+            } else {
+                currentData[index][field] = value;
+            }
+
+            saveData();
             calculateAllStats();
         }
 
